@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
+import { Globe, LayoutDashboard, ShieldCheck, Code2, SearchCheck, Lightbulb } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const GOLD = "#C9A84C";
@@ -17,33 +18,33 @@ const NAV_LINKS = ["Services", "Projects", "Contact"];
 
 const SERVICES = [
   {
-    icon: "◈",
+    icon: Globe,
     title: "Website Creation",
     desc: "Pixel-perfect, blazing-fast websites built to convert visitors into clients. Landing pages, business sites, portfolios — crafted with care.",
   },
   {
-    icon: "⬡",
+    icon: LayoutDashboard,
     title: "Web Applications",
     desc: "Custom dashboards, portals, and tools that solve real business problems. We turn complex requirements into elegant, usable software.",
   },
   {
-    icon: "◉",
+    icon: ShieldCheck,
     title: "Maintenance & Support",
     desc: "Your site stays healthy, fast, and up-to-date. Ongoing care, updates, and fixes — so you never have to worry about the technical side.",
   },
   {
-    icon: "◉",
+    icon: Code2,
     title: "Application Developement",
     desc: "Application development involves creating software applications that solve real-world problems through coding, design, testing, and deployment.",
   },
   {
-    icon: "◉",
+    icon: SearchCheck,
     title: "SEO Marketing",
     desc: "SEO marketing helps websites rank higher on search engines to attract more visitors and customers organically.",
   },
 
   {
-    icon: "◇",
+    icon: Lightbulb,
     title: "Problem Solving",
     desc: "Stuck with a tech challenge? We consult, diagnose, and deliver. No jargon — just clear solutions that move your business forward.",
   },
@@ -191,12 +192,30 @@ function Header() {
   const visible = useHideOnScroll();
   const active = useActiveSection(["services", "projects", "contact"]);
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) setMenuOpen(false);
+  }, [isMobile]);
+
+  const handleMenuNav = (id: string) => {
+    scrollToSection(id);
+    setMenuOpen(false);
+  };
 
   return (
     <AnimatePresence>
@@ -210,12 +229,14 @@ function Header() {
           style={{
             position: "fixed",
             top: 30,
+            left: isMobile ? 16 : undefined,
+            right: isMobile ? 16 : undefined,
             width: "calc(100% - 48px)",
             maxWidth: 1100,
             zIndex: 100,
             borderRadius: 24,
-            padding: "0 28px",
-            height: 64,
+            padding: isMobile ? "0 16px" : "0 28px",
+            height: isMobile ? 58 : 64,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -246,87 +267,220 @@ function Header() {
             </span>
           </button>
 
-          {/* Nav */}
-          <nav style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {NAV_LINKS.map((l) => {
-              const id = l.toLowerCase();
-              const isActive = active === id;
-              return (
-                <button
-                  key={l}
-                  onClick={() => scrollToSection(id)}
+          {isMobile ? (
+            <button
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 12,
+                border: `1px solid rgba(201,168,76,0.25)`,
+                background: "rgba(255,255,255,0.03)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ width: 18, height: 14, position: "relative" }}>
+                <span
                   style={{
-                    position: "relative",
-                    background: isActive ? "rgba(201,168,76,0.10)" : "transparent",
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: "100%",
+                    height: 2,
+                    background: WHITE,
+                    borderRadius: 2,
+                    transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none",
+                    transition: "transform 0.25s ease",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 6,
+                    width: "100%",
+                    height: 2,
+                    background: WHITE,
+                    borderRadius: 2,
+                    opacity: menuOpen ? 0 : 1,
+                    transition: "opacity 0.2s ease",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 12,
+                    width: "100%",
+                    height: 2,
+                    background: WHITE,
+                    borderRadius: 2,
+                    transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none",
+                    transition: "transform 0.25s ease",
+                  }}
+                />
+              </div>
+            </button>
+          ) : (
+            <nav style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              {NAV_LINKS.map((l) => {
+                const id = l.toLowerCase();
+                const isActive = active === id;
+                return (
+                  <button
+                    key={l}
+                    onClick={() => scrollToSection(id)}
+                    style={{
+                      position: "relative",
+                      background: isActive ? "rgba(201,168,76,0.10)" : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: isActive ? WHITE : MUTED,
+                      fontSize: 14,
+                      fontWeight: isActive ? 500 : 400,
+                      letterSpacing: "0.01em",
+                      fontFamily: "'DM Sans', sans-serif",
+                      padding: "7px 16px",
+                      borderRadius: 50,
+                      transition: "color 0.2s, background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = WHITE;
+                        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = MUTED;
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    {l}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        style={{
+                          position: "absolute",
+                          bottom: 5,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 16,
+                          height: 2,
+                          borderRadius: 2,
+                          background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT})`,
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+
+              <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
+
+              <button
+                onClick={() => scrollToSection("contact")}
+                style={{
+                  background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD_LIGHT})`,
+                  color: "#000",
+                  padding: "9px 22px",
+                  borderRadius: 50,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  letterSpacing: "0.03em",
+                  fontFamily: "'DM Sans', sans-serif",
+                  transition: "opacity 0.2s, transform 0.2s",
+                  boxShadow: `0 0 20px rgba(201,168,76,0.2)`,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "scale(0.97)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                Get in touch
+              </button>
+            </nav>
+          )}
+
+          <AnimatePresence>
+            {isMobile && menuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 10px)",
+                  left: 0,
+                  right: 0,
+                  width: "100%",
+                  borderRadius: 18,
+                  padding: 12,
+                  background: "rgba(9,9,9,0.97)",
+                  border: `1px solid rgba(201,168,76,0.25)`,
+                  boxShadow: "0 16px 32px rgba(0,0,0,0.45)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                }}
+              >
+                {NAV_LINKS.map((l) => {
+                  const id = l.toLowerCase();
+                  const isActive = active === id;
+                  return (
+                    <button
+                      key={`mobile-${l}`}
+                      onClick={() => handleMenuNav(id)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        background: isActive ? "rgba(201,168,76,0.12)" : "transparent",
+                        border: "none",
+                        color: isActive ? WHITE : WHITE,
+                        fontSize: 15,
+                        fontWeight: isActive ? 600 : 500,
+                        letterSpacing: "0.01em",
+                        fontFamily: "'DM Sans', sans-serif",
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {l}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => handleMenuNav("contact")}
+                  style={{
+                    marginTop: 4,
+                    width: "100%",
+                    background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD_LIGHT})`,
+                    color: "#000",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    fontSize: 14,
+                    fontWeight: 700,
                     border: "none",
                     cursor: "pointer",
-                    color: isActive ? WHITE : MUTED,
-                    fontSize: 14,
-                    fontWeight: isActive ? 500 : 400,
-                    letterSpacing: "0.01em",
+                    letterSpacing: "0.03em",
                     fontFamily: "'DM Sans', sans-serif",
-                    padding: "7px 16px",
-                    borderRadius: 50,
-                    transition: "color 0.2s, background 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = WHITE;
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = MUTED;
-                      e.currentTarget.style.background = "transparent";
-                    }
+                    boxShadow: `0 0 20px rgba(201,168,76,0.2)`,
                   }}
                 >
-                  {l}
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      style={{
-                        position: "absolute",
-                        bottom: 5,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: 16,
-                        height: 2,
-                        borderRadius: 2,
-                        background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD_LIGHT})`,
-                      }}
-                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                    />
-                  )}
+                  Get in touch
                 </button>
-              );
-            })}
-
-            <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
-
-            <button
-              onClick={() => scrollToSection("contact")}
-              style={{
-                background: `linear-gradient(135deg, ${GOLD_DARK}, ${GOLD_LIGHT})`,
-                color: "#000",
-                padding: "9px 22px",
-                borderRadius: 50,
-                fontSize: 13,
-                fontWeight: 700,
-                border: "none",
-                cursor: "pointer",
-                letterSpacing: "0.03em",
-                fontFamily: "'DM Sans', sans-serif",
-                transition: "opacity 0.2s, transform 0.2s",
-                boxShadow: `0 0 20px rgba(201,168,76,0.2)`,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "scale(0.97)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
-            >
-              Get in touch
-            </button>
-          </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.header>
       )}
     </AnimatePresence>
@@ -542,6 +696,8 @@ function Hero() {
 
 // ── Services ──────────────────────────────────────────────────────────────────
 function Services() {
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
   return (
     <section id="services" style={{ padding: "120px 24px", maxWidth: 1100, margin: "0 auto" }}>
       <FadeUp style={{ textAlign: "center", marginBottom: 16 }}>
@@ -557,31 +713,71 @@ function Services() {
       <div style={{ marginTop: 60, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
         {SERVICES.map((s, i) => (
           <FadeUp key={s.title} delay={i * 0.1}>
+            {(() => {
+              const isHovered = hoveredCard === s.title;
+              const Icon = s.icon;
+              return (
             <div
               style={{
-                padding: "36px 28px",
+                padding: "28px 24px",
                 borderRadius: 20,
                 border: `1px solid rgba(201,168,76,0.12)`,
                 background: "rgba(255,255,255,0.02)",
                 height: "100%",
-                transition: "border-color 0.3s, background 0.3s, transform 0.3s",
+                minHeight: 228,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                overflow: "hidden",
+                boxShadow: "0 0 0 rgba(201,168,76,0)",
+                transition: "border-color 0.35s ease, background 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease",
                 cursor: "default",
               }}
               onMouseEnter={(e) => {
+                setHoveredCard(s.title);
                 (e.currentTarget as HTMLDivElement).style.borderColor = `rgba(201,168,76,0.35)`;
-                (e.currentTarget as HTMLDivElement).style.background = `rgba(201,168,76,0.05)`;
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
+                (e.currentTarget as HTMLDivElement).style.background = `rgba(201,168,76,0.06)`;
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-6px)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 28px rgba(201,168,76,0.14)";
               }}
               onMouseLeave={(e) => {
+                setHoveredCard(null);
                 (e.currentTarget as HTMLDivElement).style.borderColor = `rgba(201,168,76,0.12)`;
                 (e.currentTarget as HTMLDivElement).style.background = `rgba(255,255,255,0.02)`;
                 (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 rgba(201,168,76,0)";
               }}
             >
-              <div style={{ fontSize: 28, color: GOLD, marginBottom: 20, lineHeight: 1 }}>{s.icon}</div>
-              <h3 style={{ fontSize: 18, fontWeight: 600, color: WHITE, marginBottom: 12, fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em" }}>{s.title}</h3>
-              <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, fontFamily: "'DM Sans', sans-serif" }}>{s.desc}</p>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "radial-gradient(circle at 78% 18%, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.08) 22%, rgba(10,10,10,0) 62%)",
+                  opacity: isHovered ? 1 : 0,
+                  transition: "opacity 0.35s ease",
+                  pointerEvents: "none",
+                }}
+              />
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(201,168,76,0.2)",
+                  background: "rgba(201,168,76,0.08)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}>
+                  <Icon size={22} color={GOLD_LIGHT} strokeWidth={1.9} />
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: WHITE, marginBottom: 9, fontFamily: "'Syne', sans-serif", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{s.title}</h3>
+                <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, fontFamily: "'DM Sans', sans-serif" }}>{s.desc}</p>
+              </div>
             </div>
+              );
+            })()}
           </FadeUp>
         ))}
       </div>
@@ -805,6 +1001,75 @@ function Footer() {
   );
 }
 
+function WhatsAppButton() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const buttonSize = isMobile ? 44 : 48;
+  const iconSize = isMobile ? 21 : 23;
+
+  return (
+    <motion.button
+      aria-label="Chat on WhatsApp"
+      onClick={() => window.open("https://wa.me/919999999999", "_blank", "noopener,noreferrer")}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{
+        opacity: 1,
+        y: [0, -6, 0],
+        scale: 1,
+        boxShadow: [
+          "0 10px 28px rgba(37,211,102,0.45), 0 10px 22px rgba(0,0,0,0.35)",
+          "0 14px 34px rgba(37,211,102,0.52), 0 12px 26px rgba(0,0,0,0.4)",
+          "0 10px 28px rgba(37,211,102,0.45), 0 10px 22px rgba(0,0,0,0.35)",
+        ],
+      }}
+      transition={{
+        opacity: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+        scale: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+        y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+        boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+      }}
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.96 }}
+      style={{
+        position: "fixed",
+        right: 20,
+        bottom: 20,
+        width: buttonSize,
+        height: buttonSize,
+        borderRadius: "50%",
+        border: "1px solid rgba(255,255,255,0.2)",
+        background: "#25D366",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        zIndex: 9999,
+      }}
+    >
+      <svg
+        width={iconSize}
+        height={iconSize}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M20.52 3.48A11.86 11.86 0 0 0 12.04 0C5.53 0 .24 5.29.24 11.8c0 2.08.54 4.11 1.57 5.9L0 24l6.48-1.69a11.76 11.76 0 0 0 5.56 1.42h.01c6.5 0 11.79-5.29 11.79-11.8 0-3.15-1.23-6.1-3.32-8.45ZM12.05 21.7h-.01a9.8 9.8 0 0 1-4.99-1.37l-.36-.21-3.84 1 1.03-3.74-.24-.38a9.78 9.78 0 0 1-1.52-5.2c0-5.42 4.41-9.83 9.83-9.83 2.63 0 5.1 1.02 6.96 2.88a9.79 9.79 0 0 1 2.87 6.95c0 5.42-4.41 9.83-9.83 9.83Zm5.39-7.37c-.29-.14-1.72-.85-1.99-.95-.27-.1-.47-.14-.66.15-.2.29-.76.95-.93 1.15-.17.2-.34.22-.63.07-.29-.14-1.21-.45-2.31-1.43-.86-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.45.12-.59.13-.13.29-.34.43-.51.14-.17.19-.29.29-.48.1-.2.05-.37-.02-.51-.08-.14-.67-1.62-.92-2.22-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-.99 2.44.03 1.44 1.03 2.83 1.18 3.03.14.2 2.03 3.1 4.92 4.34.69.3 1.22.48 1.64.61.69.22 1.32.19 1.82.12.56-.08 1.72-.7 1.96-1.38.24-.68.24-1.27.17-1.39-.07-.12-.27-.2-.56-.34Z"
+          fill="#FFFFFF"
+        />
+      </svg>
+    </motion.button>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function EsconixHome() {
   return (
@@ -856,6 +1121,7 @@ export default function EsconixHome() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </>
   );
 }
