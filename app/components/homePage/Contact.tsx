@@ -9,6 +9,7 @@ import FadeUp from "../assets/FadeUp";
 // ── Contact ───────────────────────────────────────────────────────────────────
 function Contact() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -23,9 +24,48 @@ function Contact() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.MouseEvent) => {
+  const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (form.name && form.email && form.message) setSent(true);
+
+    if (!form.name || !form.email || !form.message) return;
+
+    try {
+      setLoading(true);
+
+      await sendMessage();
+
+      setSent(true);
+
+      setForm({
+        name: "",
+        email: "",
+        message: "",
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send message");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    const response = await fetch("/api/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to send message");
+    }
+
+    return data;
   };
 
   const inputStyle: React.CSSProperties = {
@@ -139,11 +179,11 @@ function Contact() {
                   alignSelf: isMobile ? "stretch" : "flex-start",
                   textAlign: "center",
                   boxShadow: `0 0 24px rgba(201,168,76,0.2)`,
+                  opacity: loading ? 0.7 : 1,
+                  pointerEvents: loading ? "none" : "auto",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "translateY(0)"; }}
               >
-                Send message →
+                {loading ? "Sending..." : "Send message →"}
               </button>
             </div>
           )}
